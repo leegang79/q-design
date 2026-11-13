@@ -1,6 +1,6 @@
 export type ModelKind = 'chat' | 'image'
 
-export type Protocol = 'openai-chat' | 'openai-image' | 'gemini-image'
+export type Protocol = 'openai-chat' | 'openai-image' | 'gemini-image' | 'bfl-image' | 'dashscope-image'
 
 export type StageId = 'sketch' | 'render' | 'structure' | 'exploded'
 

@@ -9,6 +9,8 @@ import { parseOptimizeResult } from '@shared/parse'
 import { STAGES } from '@shared/stages'
 import type { ConnectionTestResult, ModelProfile, ProfileInput, StageId } from '@shared/types'
 import { completeChat, testChat, testOpenAiModels } from './providers/chat/openai'
+import { testBfl } from './providers/image/bfl'
+import { testDashscope } from './providers/image/dashscope'
 import { generateImage } from './providers/image/generate'
 import { testGemini } from './providers/image/gemini'
 import {
@@ -128,6 +130,8 @@ async function testProfile(profile: ModelProfile): Promise<string> {
   if (profile.protocol === 'openai-chat') return testChat(profile)
   if (profile.protocol === 'openai-image') return testOpenAiModels(profile)
   if (profile.protocol === 'gemini-image') return testGemini(profile)
+  if (profile.protocol === 'bfl-image') return testBfl(profile)
+  if (profile.protocol === 'dashscope-image') return testDashscope(profile)
   throw new Error('不支持的协议')
 }
 

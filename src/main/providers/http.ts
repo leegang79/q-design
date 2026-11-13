@@ -44,10 +44,18 @@ export async function readErrorMessage(response: Response): Promise<string> {
     const json = JSON.parse(text) as {
       error?: { message?: string } | string
       message?: string
+      detail?: string | Array<{ msg?: string }>
     }
     if (typeof json.error === 'string' && json.error.trim()) return json.error.trim()
     if (json.error && typeof json.error === 'object' && json.error.message) return json.error.message
     if (typeof json.message === 'string' && json.message.trim()) return json.message.trim()
+    if (typeof json.detail === 'string' && json.detail.trim()) return json.detail.trim()
+    if (Array.isArray(json.detail)) {
+      const messages = json.detail
+        .map((item) => (item && typeof item.msg === 'string' ? item.msg.trim() : ''))
+        .filter(Boolean)
+      if (messages.length > 0) return messages.join('；')
+    }
   } catch {
     return compact
   }

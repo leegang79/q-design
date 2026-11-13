@@ -46,42 +46,12 @@ export function App() {
         onCreate={() => void commit(() => window.qdesign.createSession())}
         onSelect={(id) => void commit(() => window.qdesign.selectSession(id))}
         onDelete={(id) => void commit(() => window.qdesign.deleteSession(id))}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
-      <main className="workspace">
-        <header className="topbar">
-          <ModelMenu
-            label="聊天模型"
-            value={state.activeChatProfileId}
-            options={state.profiles.filter((profile) => profile.kind === 'chat')}
-            onChange={(chatProfileId) =>
-              void commit(() =>
-                window.qdesign.setActiveModels({
-                  chatProfileId,
-                  imageProfileId: state.activeImageProfileId
-                })
-              )
-            }
-          />
-          <button type="button" className="ghost" onClick={() => setSettingsOpen(true)}>
-            模型设置
-          </button>
-        </header>
-        {notice ? <p className="notice">{notice}</p> : null}
-        {session ? (
-          <ChatPanel
-            session={session}
-            busy={busyHere && state.busyAction === 'optimize'}
-            locked={state.busySessionId !== null}
-            onSend={(content) => void commit(() => window.qdesign.sendMessage(session.id, content))}
-            onOptimize={() => void commit(() => window.qdesign.optimizePrompts(session.id))}
-          />
-        ) : (
-          <p className="empty-copy">还没有设计会话。</p>
-        )}
-      </main>
       {session ? (
         <StageBoard
           session={session}
+          notice={notice}
           profiles={state.profiles}
           activeImageProfileId={state.activeImageProfileId}
           busy={busyHere && state.busyAction === 'generate'}
@@ -99,7 +69,31 @@ export function App() {
           onGenerateAll={() => commit(() => window.qdesign.generateAll(session.id))}
         />
       ) : (
-        <aside className="board" />
+        <section className="pane work">
+          {notice ? <p className="notice">{notice}</p> : null}
+          <p className="empty-copy">还没有设计会话。</p>
+        </section>
+      )}
+      {session ? (
+        <ChatPanel
+          session={session}
+          profiles={state.profiles.filter((profile) => profile.kind === 'chat')}
+          activeChatProfileId={state.activeChatProfileId}
+          busy={busyHere && state.busyAction === 'optimize'}
+          locked={state.busySessionId !== null}
+          onSelectModel={(chatProfileId) =>
+            void commit(() =>
+              window.qdesign.setActiveModels({
+                chatProfileId,
+                imageProfileId: state.activeImageProfileId
+              })
+            )
+          }
+          onSend={(content) => void commit(() => window.qdesign.sendMessage(session.id, content))}
+          onOptimize={() => void commit(() => window.qdesign.optimizePrompts(session.id))}
+        />
+      ) : (
+        <aside className="pane drawer" />
       )}
       {settingsOpen ? (
         <SettingsPanel
@@ -109,32 +103,6 @@ export function App() {
         />
       ) : null}
     </div>
-  )
-}
-
-function ModelMenu({
-  label,
-  value,
-  options,
-  onChange
-}: {
-  label: string
-  value: string | null
-  options: PublicState['profiles']
-  onChange: (id: string | null) => void
-}) {
-  return (
-    <label className="model-select">
-      <span>{label}</span>
-      <select value={value ?? ''} onChange={(event) => onChange(event.target.value || null)}>
-        <option value="">{options.length ? '未选择' : '尚未配置'}</option>
-        {options.map((profile) => (
-          <option key={profile.id} value={profile.id}>
-            {profile.name} · {profile.model}
-          </option>
-        ))}
-      </select>
-    </label>
   )
 }
 

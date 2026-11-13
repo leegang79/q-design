@@ -14,7 +14,13 @@ import {
   updateStagePrompt
 } from './store'
 
-const PROTOCOLS = new Set<Protocol>(['openai-chat', 'openai-image', 'gemini-image'])
+const PROTOCOLS = new Set<Protocol>([
+  'openai-chat',
+  'openai-image',
+  'gemini-image',
+  'bfl-image',
+  'dashscope-image'
+])
 const STAGE_IDS = new Set<StageId>(['sketch', 'render', 'structure', 'exploded'])
 
 export function registerIpc(): void {

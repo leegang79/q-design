@@ -1,15 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
-import type { DesignSession } from '@shared/types'
+import type { DesignSession, PublicProfile } from '@shared/types'
 
 type ChatPanelProps = {
   session: DesignSession
+  profiles: PublicProfile[]
+  activeChatProfileId: string | null
   busy: boolean
   locked: boolean
+  onSelectModel: (id: string | null) => void
   onSend: (content: string) => void
   onOptimize: () => void
 }
 
-export function ChatPanel({ session, busy, locked, onSend, onOptimize }: ChatPanelProps) {
+export function ChatPanel({
+  session,
+  profiles,
+  activeChatProfileId,
+  busy,
+  locked,
+  onSelectModel,
+  onSend,
+  onOptimize
+}: ChatPanelProps) {
   const [draft, setDraft] = useState('')
   const threadRef = useRef<HTMLDivElement>(null)
 
@@ -27,13 +39,28 @@ export function ChatPanel({ session, busy, locked, onSend, onOptimize }: ChatPan
   }
 
   return (
-    <section className="chat">
+    <aside className="pane drawer">
+      <header className="drawer-head">
+        <h2>对话</h2>
+        <label className="model-select">
+          <select
+            aria-label="聊天模型"
+            value={activeChatProfileId ?? ''}
+            onChange={(event) => onSelectModel(event.target.value || null)}
+          >
+            <option value="">{profiles.length ? '未选择' : '尚未配置'}</option>
+            {profiles.map((profile) => (
+              <option key={profile.id} value={profile.id}>
+                {profile.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </header>
+      <section className="chat">
       <div className="thread" ref={threadRef}>
         {session.messages.length === 0 ? (
-          <div className="starter">
-            <p>描述想设计的产品。可以分几条补充造型、材料和结构。</p>
-            <p>写完后点「优化提示词」，聊天模型会整理出四段可编辑的生图提示词。</p>
-          </div>
+          <p className="starter">描述产品。写完后点「优化提示词」。</p>
         ) : (
           session.messages.map((message) => (
             <article key={message.id} className={message.role === 'user' ? 'bubble user' : 'bubble assistant'}>
@@ -72,6 +99,7 @@ export function ChatPanel({ session, busy, locked, onSend, onOptimize }: ChatPan
           </button>
         </div>
       </form>
-    </section>
+      </section>
+    </aside>
   )
 }

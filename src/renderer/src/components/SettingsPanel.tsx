@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MODEL_PRESETS, protocolLabel, protocolsForKind } from '@shared/presets'
+import { MODEL_PRESETS, coerceDashscopeImage, isDashscopeHost, modelChoices, protocolLabel, protocolsForKind } from '@shared/presets'
 import type { ModelKind, ProfileInput, Protocol, PublicState } from '@shared/types'
 
 type SettingsPanelProps = {
@@ -23,6 +23,12 @@ export function SettingsPanel({ state, onClose, onCommit }: SettingsPanelProps) 
   const [testMessage, setTestMessage] = useState<string | null>(null)
   const [testing, setTesting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const catalog = modelChoices(draft.protocol)
+  const modelOptions = catalog
+    ? !draft.model || catalog.some((item) => item.id === draft.model)
+      ? catalog
+      : [...catalog, { id: draft.model, label: draft.model }]
+    : null
 
   function applyPreset(presetId: string) {
     const preset = MODEL_PRESETS.find((item) => item.id === presetId)
@@ -57,12 +63,19 @@ export function SettingsPanel({ state, onClose, onCommit }: SettingsPanelProps) 
   }
 
   function updateKind(kind: ModelKind) {
-    const protocols = protocolsForKind(kind)
-    setDraft((current) => ({
-      ...current,
-      kind,
-      protocol: protocols.includes(current.protocol) ? current.protocol : protocols[0]
-    }))
+    setDraft((current) => {
+      const protocols = protocolsForKind(kind)
+      const protocol = protocols.includes(current.protocol)
+        ? current.protocol
+        : kind === 'image' && isDashscopeHost(current.baseUrl)
+          ? 'dashscope-image'
+          : protocols[0]
+      return withProtocol({ ...current, kind, protocol })
+    })
+  }
+
+  function updateProtocol(protocol: Protocol) {
+    setDraft((current) => withProtocol({ ...current, protocol }))
   }
 
   async function save() {
@@ -170,7 +183,7 @@ export function SettingsPanel({ state, onClose, onCommit }: SettingsPanelProps) 
               协议
               <select
                 value={draft.protocol}
-                onChange={(event) => setDraft({ ...draft, protocol: event.target.value as Protocol })}
+                onChange={(event) => updateProtocol(event.target.value as Protocol)}
               >
                 {protocolsForKind(draft.kind).map((protocol) => (
                   <option key={protocol} value={protocol}>
@@ -186,10 +199,29 @@ export function SettingsPanel({ state, onClose, onCommit }: SettingsPanelProps) 
                 onChange={(event) => setDraft({ ...draft, baseUrl: event.target.value })}
               />
             </label>
-            <label>
-              模型名
-              <input value={draft.model} onChange={(event) => setDraft({ ...draft, model: event.target.value })} />
-            </label>
+            {modelOptions ? (
+              <label>
+                模型
+                <select value={draft.model} onChange={(event) => setDraft({ ...draft, model: event.target.value })}>
+                  {modelOptions.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <label>
+                模型名
+                <input value={draft.model} onChange={(event) => setDraft({ ...draft, model: event.target.value })} />
+              </label>
+            )}
+            {draft.protocol === 'bfl-image' ? (
+              <p className="hint">模型名填写端点，例如 flux-3-image、flux-2-pro、flux-kontext-pro。后续阶段会带上上一张图。</p>
+            ) : null}
+            {draft.protocol === 'dashscope-image' ? (
+              <p className="hint">万相文生图不在兼容模式的模型列表里，从上面选择。后续阶段会改用纯文字重新生成。</p>
+            ) : null}
             <label>
               API Key
               <input
@@ -227,6 +259,11 @@ export function SettingsPanel({ state, onClose, onCommit }: SettingsPanelProps) 
     setTestMessage(null)
     setFormError(null)
   }
+}
+
+function withProtocol(input: ProfileInput): ProfileInput {
+  if (input.protocol !== 'dashscope-image') return input
+  return coerceDashscopeImage(input)
 }
 
 function cleanError(message: string): string {

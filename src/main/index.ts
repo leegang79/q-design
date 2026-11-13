@@ -12,7 +12,7 @@ function createWindow(): void {
     title: 'Q Design',
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 18, y: 18 },
-    backgroundColor: '#e9e2d6',
+    backgroundColor: '#e7e9ee',
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
       contextIsolation: true,

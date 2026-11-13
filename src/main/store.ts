@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { app } from 'electron'
 import Store from 'electron-store'
 import { isMaskedSecret, maskSecret } from '@shared/parse'
-import { protocolsForKind } from '@shared/presets'
+import { coerceDashscopeImage, protocolsForKind } from '@shared/presets'
 import { createEmptyStages, STAGES, stageIndex } from '@shared/stages'
 import type {
   DesignSession,
@@ -51,6 +51,14 @@ export function initStore(): void {
         changed = true
       }
     }
+  }
+  for (const profile of state.profiles) {
+    const next = coerceDashscopeImage(profile)
+    if (next.protocol === profile.protocol && next.baseUrl === profile.baseUrl && next.model === profile.model) continue
+    profile.protocol = next.protocol
+    profile.baseUrl = next.baseUrl
+    profile.model = next.model
+    changed = true
   }
   if (changed) writeState(state)
 }
@@ -341,7 +349,7 @@ function normalizeProfile(input: ProfileInput, existing: ModelProfile[]): ModelP
   const previous = input.id ? existing.find((profile) => profile.id === input.id) : undefined
   const apiKey = resolveApiKey(input.apiKey, previous?.apiKey)
   if (!apiKey) throw new Error('请填写 API Key')
-  return {
+  return coerceDashscopeImage({
     id: previous?.id ?? randomUUID(),
     name,
     kind,
@@ -349,7 +357,7 @@ function normalizeProfile(input: ProfileInput, existing: ModelProfile[]): ModelP
     baseUrl,
     apiKey,
     model
-  }
+  })
 }
 
 function resolveApiKey(incoming: string, previous?: string): string {

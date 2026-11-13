@@ -7,14 +7,23 @@ type SessionListProps = {
   onCreate: () => void
   onSelect: (id: string) => void
   onDelete: (id: string) => void
+  onOpenSettings: () => void
 }
 
-export function SessionList({ sessions, activeSessionId, disabled, onCreate, onSelect, onDelete }: SessionListProps) {
+export function SessionList({
+  sessions,
+  activeSessionId,
+  disabled,
+  onCreate,
+  onSelect,
+  onDelete,
+  onOpenSettings
+}: SessionListProps) {
   return (
-    <aside className="sidebar">
+    <aside className="pane sidebar">
       <div className="brand">
         <p className="mark">Q Design</p>
-        <p className="tagline">从对话整理提示词，再生成草图、效果图、结构图和爆炸图。</p>
+        <p className="tagline">设计会话</p>
       </div>
       <button type="button" className="solid full" onClick={onCreate} disabled={disabled}>
         新建设计
@@ -37,6 +46,9 @@ export function SessionList({ sessions, activeSessionId, disabled, onCreate, onS
           </div>
         ))}
       </nav>
+      <button type="button" className="ghost full sidebar-foot" onClick={onOpenSettings}>
+        模型设置
+      </button>
     </aside>
   )
 }
